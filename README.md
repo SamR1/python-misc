@@ -1,6 +1,6 @@
 # python-misc
 
-Fork of [mh-github/python-misc](https://github.com/mh-github/python-misc):  
+Fork from [mh-github/python-misc](https://github.com/mh-github/python-misc):  
 * Python3 compatibility
 * Language support for [**stopwords**](http://www.nltk.org/book/ch02.html) added 
 
