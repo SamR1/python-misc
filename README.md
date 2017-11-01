@@ -2,7 +2,7 @@
 
 Fork from [mh-github/python-misc](https://github.com/mh-github/python-misc):  
 * Python3 compatibility
-* Language definition for [**stopwords**](http://www.nltk.org/book/ch02.html) and [**TextBlox**](https://textblob.readthedocs.io/) analysis added.  
+* Language definition for [**stopwords**](http://www.nltk.org/book/ch02.html) and [**TextBlob**](https://textblob.readthedocs.io/) analysis added.  
 (Note: Only English and French are supported).
 
 Pre-requisites:

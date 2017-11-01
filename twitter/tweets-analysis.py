@@ -17,6 +17,8 @@ from sklearn.cluster import KMeans
 from textblob import TextBlob
 from textblob_fr import PatternTagger, PatternAnalyzer
 
+lemma = WordNetLemmatizer()
+
 
 def fetchTweetsFromFile(twitter_handle):
     fields = []
@@ -36,28 +38,26 @@ def fetchTweetsFromFile(twitter_handle):
     return rows
 
 
-def clean_text_and_tokenize(line, lang):
-    sw = stopwords.words(lang)
-    lemma = WordNetLemmatizer()
+def clean_text_and_tokenize(line, sw):
 
     line   = re.sub(r'\$\w*', '', line)  # Remove tickers
     line   = re.sub(r'http?:.*$', '', line)
     line   = re.sub(r'https?:.*$', '', line)
     line   = re.sub(r'pic?.*\/\w*', '', line)
-    line   = re.sub(r'[' + string.punctuation + ']+', ' ', line)  # Remove puncutations like 's
-    
+    line   = re.sub(r'[' + string.punctuation + ']+', ' ', line)  # Remove punctuations like 's
+
     tokens = TweetTokenizer(strip_handles=True, reduce_len=True).tokenize(line)
     tokens = [w.lower() for w in tokens if w not in sw and len(w) > 2 and w.isalpha()]
     tokens = [lemma.lemmatize(word) for word in tokens]
-    
+
     return tokens
 
 
-def getCleanedWords(lines, lang):
+def get_cleaned_words(lines, sw):
     words = []
     
     for line in lines:
-        words += clean_text_and_tokenize(line, lang)
+        words += clean_text_and_tokenize(line, sw)
     return words
 
 
@@ -71,7 +71,8 @@ def average_words(lines):
     return 1.0 * total_words / len(lines)
 
 
-def top_words(words, top=5):
+def top_words(words, sw, top=10):
+    words = [word for word in words if word not in sw]
     pt = PrettyTable(field_names=['Words', 'Count'])
     c = Counter(words)
     [pt.add_row(kv) for kv in c.most_common()[:top]]
@@ -187,15 +188,16 @@ def main():
         if lang != "english" and lang != "french":
             sys.exit("Only english and french are supported.")
 
+    sw = stopwords.words(lang)
     twitter_handle = sys.argv[1]
-    tweet_rows     = fetchTweetsFromFile(twitter_handle)
+    tweet_rows = fetchTweetsFromFile(twitter_handle)
 
     tweets = [row[4] for row in tweet_rows]
     print("Average Number of words per tweet = {}".format(average_words(tweets)))
-    words = getCleanedWords(tweets, lang)
+    words = get_cleaned_words(tweets, sw)
     print("Lexical diversity = {}".format(lexical_diversity(words)))
     
-    top_words(words)
+    top_words(words, sw)
     popular_tweets(tweet_rows)
 
     cleaned_tweets = []
