@@ -13,6 +13,7 @@ from nltk.stem.wordnet import WordNetLemmatizer
 sw            = stopwords.words('english')
 lemma         = WordNetLemmatizer()
 
+
 def fetchTweetsFromFile(twitter_handle):
     fields = []
     rows   = []
@@ -26,9 +27,10 @@ def fetchTweetsFromFile(twitter_handle):
 
         for row in csvreader:
             rows.append(row)
-        print "Total no. of tweets: {}".format(csvreader.line_num-2)
+        print("Total no. of tweets: {}".format(csvreader.line_num-2))
 
     return rows
+
 
 def clean_text_and_tokenize(line):
     line   = re.sub(r'\$\w*', '', line)  # Remove tickers
@@ -43,6 +45,7 @@ def clean_text_and_tokenize(line):
     
     return tokens
 
+
 def getCleanedWords(lines):
     words = []
     
@@ -50,20 +53,24 @@ def getCleanedWords(lines):
         words += clean_text_and_tokenize(line)
     return words
 
+
 def lexical_diversity(tokens):
     return 1.0 * len(set(tokens)) / len(tokens)
+
 
 # Helper function for computing number of words per tweet
 def average_words(lines):
     total_words = sum([len(s.split()) for s in lines])
     return 1.0 * total_words / len(lines)
 
+
 def top_words(words, top=5):
     pt = PrettyTable(field_names=['Words', 'Count'])
     c = Counter(words)
     [pt.add_row(kv) for kv in c.most_common()[:top]]
     pt.align['Words'], pt.align['Count'] = 'l', 'r'  # Set column alignment
-    print pt
+    print(pt)
+
 
 def popular_tweets(tweet_rows, top=5):
     popular = []
@@ -73,17 +80,19 @@ def popular_tweets(tweet_rows, top=5):
     topTweets = heapq.nlargest(
         top, popular, key=lambda e: e[1])  # ref sof -> 2243542
 
-    print "\nPrinting top {} tweets".format(top)
+    print("\nPrinting top {} tweets".format(top))
     counter = 0
     for (id, popularity, tweet, url) in topTweets:
         counter += 1
-        print "{}. {}".format(counter, tweet)
-        print "Popularity = {}".format(popularity)
-        print "Link = {}".format(url)
-        print "-------------------"
+        print("{}. {}".format(counter, tweet))
+        print("Popularity = {}".format(popularity))
+        print("Link = {}".format(url))
+        print("-------------------")
+
 
 def clean_tweet(tweet):
     return " ".join(clean_text_and_tokenize(tweet))
+
 
 def sentiment_analysis_basic(tweets):
     positive_tweets = 0
@@ -104,16 +113,18 @@ def sentiment_analysis_basic(tweets):
     positive_tweets_percentage = positive_tweets / total_tweets_analysed * 100
     neutral_tweets_percentage  = neutral_tweets  / total_tweets_analysed * 100
 
-    print "\nNo. of positive tweets = {} Percentage = {}".format(
-        positive_tweets, positive_tweets_percentage)
-    print "No. of neutral tweets  = {} Percentage = {}".format(
-        neutral_tweets, neutral_tweets_percentage)
-    print "No. of negative tweets = {} Percentage = {}".format(
-        negative_tweets, 100 - (positive_tweets_percentage + neutral_tweets_percentage))
+    print("\nNo. of positive tweets = {} Percentage = {}".format(
+        positive_tweets, positive_tweets_percentage))
+    print("No. of neutral tweets  = {} Percentage = {}".format(
+        neutral_tweets, neutral_tweets_percentage))
+    print("No. of negative tweets = {} Percentage = {}".format(
+        negative_tweets, 100 - (positive_tweets_percentage + neutral_tweets_percentage)))
+
 
 # sof -> 20078816
 def remove_non_ascii(text):
     return ''.join(i for i in text if ord(i) < 128)
+
 
 def clusterTweetsKmeans(tweets):
     taggeddocs   = []
@@ -128,7 +139,7 @@ def clusterTweetsKmeans(tweets):
 
     model = Doc2Vec(
         taggeddocs, dm=0, alpha=0.025, size=20, min_alpha=0.025, min_count=0)
-    print " "
+    print(" ")
     for epoch in range(60):
         model.train(
             taggeddocs, total_examples=model.corpus_count, epochs=model.iter)
@@ -150,14 +161,15 @@ def clusterTweetsKmeans(tweets):
     for i in topic2wordsmap:
         print("Topic {} has words: {}".format(i + 1, ' '.join(remove_non_ascii(word) for word in topic2wordsmap[i][:10])))
 
+
 def main():
     twitter_handle = sys.argv[1]
     tweet_rows     = fetchTweetsFromFile(twitter_handle)
 
     tweets = [row[4] for row in tweet_rows]
-    print "Average Number of words per tweet = {}".format(average_words(tweets))
+    print("Average Number of words per tweet = {}".format(average_words(tweets)))
     words = getCleanedWords(tweets)
-    print "Lexical diversity = {}".format(lexical_diversity(words))
+    print("Lexical diversity = {}".format(lexical_diversity(words)))
     
     top_words(words)
     popular_tweets(tweet_rows)
@@ -167,6 +179,7 @@ def main():
         cleaned_tweets.append(clean_tweet(tweet))    
     sentiment_analysis_basic(cleaned_tweets)
     clusterTweetsKmeans(cleaned_tweets)
+
 
 if __name__ == '__main__':
     main()
