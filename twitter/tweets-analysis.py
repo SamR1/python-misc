@@ -1,17 +1,20 @@
 from __future__ import division
-import sys, csv, nltk, re, string, heapq, gensim
-from nltk.corpus   import stopwords
-from nltk.tokenize import TweetTokenizer
-from collections   import Counter
-from prettytable   import PrettyTable
-from textblob      import TextBlob
-from gensim.models.doc2vec import Doc2Vec, TaggedDocument
-from sklearn.cluster import KMeans
-from gensim import corpora, models
-from nltk.stem.wordnet import WordNetLemmatizer
 
-sw            = stopwords.words('english')
-lemma         = WordNetLemmatizer()
+import csv
+import gensim
+import heapq
+import re
+import string
+import sys
+from collections import Counter
+
+from gensim.models.doc2vec import Doc2Vec, TaggedDocument
+from nltk.corpus import stopwords
+from nltk.stem.wordnet import WordNetLemmatizer
+from nltk.tokenize import TweetTokenizer
+from prettytable import PrettyTable
+from sklearn.cluster import KMeans
+from textblob import TextBlob
 
 
 def fetchTweetsFromFile(twitter_handle):
@@ -32,7 +35,10 @@ def fetchTweetsFromFile(twitter_handle):
     return rows
 
 
-def clean_text_and_tokenize(line):
+def clean_text_and_tokenize(line, lang):
+    sw = stopwords.words(lang)
+    lemma = WordNetLemmatizer()
+
     line   = re.sub(r'\$\w*', '', line)  # Remove tickers
     line   = re.sub(r'http?:.*$', '', line)
     line   = re.sub(r'https?:.*$', '', line)
@@ -46,11 +52,11 @@ def clean_text_and_tokenize(line):
     return tokens
 
 
-def getCleanedWords(lines):
+def getCleanedWords(lines, lang):
     words = []
     
     for line in lines:
-        words += clean_text_and_tokenize(line)
+        words += clean_text_and_tokenize(line, lang)
     return words
 
 
@@ -90,8 +96,8 @@ def popular_tweets(tweet_rows, top=5):
         print("-------------------")
 
 
-def clean_tweet(tweet):
-    return " ".join(clean_text_and_tokenize(tweet))
+def clean_tweet(tweet, lang):
+    return " ".join(clean_text_and_tokenize(tweet, lang))
 
 
 def sentiment_analysis_basic(tweets):
@@ -163,12 +169,21 @@ def clusterTweetsKmeans(tweets):
 
 
 def main():
+
+    if len(sys.argv) < 2:
+        sys.exit("Invalid number of parameters.\n"
+                 "Correct use: $python tweets_analysis 'file_name' 'language' (Language is optional)")
+
+    if len(sys.argv) == 2:
+        lang = "english"
+    else:
+        lang = sys.argv[2]
     twitter_handle = sys.argv[1]
     tweet_rows     = fetchTweetsFromFile(twitter_handle)
 
     tweets = [row[4] for row in tweet_rows]
     print("Average Number of words per tweet = {}".format(average_words(tweets)))
-    words = getCleanedWords(tweets)
+    words = getCleanedWords(tweets, lang)
     print("Lexical diversity = {}".format(lexical_diversity(words)))
     
     top_words(words)
@@ -176,7 +191,7 @@ def main():
 
     cleaned_tweets = []
     for tweet in tweets:
-        cleaned_tweets.append(clean_tweet(tweet))    
+        cleaned_tweets.append(clean_tweet(tweet, lang))
     sentiment_analysis_basic(cleaned_tweets)
     clusterTweetsKmeans(cleaned_tweets)
 
