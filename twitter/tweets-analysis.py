@@ -15,6 +15,7 @@ from nltk.tokenize import TweetTokenizer
 from prettytable import PrettyTable
 from sklearn.cluster import KMeans
 from textblob import TextBlob
+from textblob_fr import PatternTagger, PatternAnalyzer
 
 
 def fetchTweetsFromFile(twitter_handle):
@@ -100,14 +101,19 @@ def clean_tweet(tweet, lang):
     return " ".join(clean_text_and_tokenize(tweet, lang))
 
 
-def sentiment_analysis_basic(tweets):
+def sentiment_analysis_basic(tweets, lang):
     positive_tweets = 0
     neutral_tweets  = 0
     negative_tweets = 0
 
     for tweet in tweets:
-        analysis  = TextBlob(tweet)
-        sentiment = analysis.sentiment.polarity
+        if lang == 'english':
+            analysis = TextBlob(tweet)
+            sentiment = analysis.sentiment.polarity
+
+        else:  # french
+            analysis = TextBlob(tweet, pos_tagger=PatternTagger(), analyzer=PatternAnalyzer())
+            sentiment = analysis.sentiment[0]
 
         if sentiment > 0:
             positive_tweets += 1
@@ -178,6 +184,9 @@ def main():
         lang = "english"
     else:
         lang = sys.argv[2]
+        if lang != "english" and lang != "french":
+            sys.exit("Only english and french are supported.")
+
     twitter_handle = sys.argv[1]
     tweet_rows     = fetchTweetsFromFile(twitter_handle)
 
@@ -192,7 +201,7 @@ def main():
     cleaned_tweets = []
     for tweet in tweets:
         cleaned_tweets.append(clean_tweet(tweet, lang))
-    sentiment_analysis_basic(cleaned_tweets)
+    sentiment_analysis_basic(cleaned_tweets, lang)
     clusterTweetsKmeans(cleaned_tweets)
 
 

@@ -14,4 +14,5 @@ six==1.11.0
 sklearn==0.0
 smart-open==1.5.3
 textblob==0.13.0
+textblob-fr==0.2.0
 urllib3==1.22
